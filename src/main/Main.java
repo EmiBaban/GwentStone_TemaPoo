@@ -5,20 +5,21 @@ import checker.CheckerConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import fileio.ActionsInput;
-import fileio.CardInput;
-import fileio.DecksInput;
-import fileio.Input;
+import fileio.*;
+import main.Card.Card;
+import main.Card.Environment;
+import main.Card.Hero;
+import main.Card.Minion;
+import main.Game.Action;
+import main.Game.Game;
+import main.Game.Player;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 /**
  * The entry point to this homework. It runs the checker that tests your implentation.
@@ -76,78 +77,155 @@ public final class Main {
 
         //TODO add here the entry point to your implementation
 
-        ArrayList<String> minionList = new ArrayList<>();
-        ArrayList<String> environmentList = new ArrayList<>();
+        List<String> minionList = Arrays.asList("The Ripper", "Miraj", "The Cursed One", "Disciple", "Sentinel", "Berserker", "Goliath", "Warden");
+        List<String> environmentList = Arrays.asList("Firestorm", "Winterfell", "Heart Hound");
 
-        minionList.add("The Ripper");
-        minionList.add("Miraj");
-        minionList.add("The Cursed One");
-        minionList.add("Disciple");
-        minionList.add("Sentinel");
-        minionList.add("Berseker");
-        minionList.add("Goliath");
-        minionList.add("Warden");
-        environmentList.add("Firestorm");
-        environmentList.add("Winterfell");
-        environmentList.add("Hear Hound");
+
+//        ArrayList<Card> cardsInHand1 = new ArrayList<>();
+//        ArrayList<Card> cardsInHand2 = new ArrayList<>();
+//
+//        cardsInHand1.add(player1.getDeck().remove(0));
+//        cardsInHand2.add(player2.getDeck().remove(0));
+
+      //  Game game = new Game(player1, player2);
+//        game.nextRound();
+//        System.out.println(player1.getCardsInHand());
+
+//        player1.PlaceCardInHand(player1.getDeck());
+//        System.out.println(player1.getCardsInHand());
+
+//        ArrayList<Card> hand = new ArrayList<>();
+//        hand.add(player1.getDeck().remove(0));
+//        System.out.println(player1.getDeck().get(0).name);
 
         DecksInput player1Decks = inputData.getPlayerOneDecks();
         DecksInput player2Decks = inputData.getPlayerTwoDecks();
 
-        int player1Idx = inputData.getGames().get(0).getStartGame().getPlayerOneDeckIdx();
-        int player2Idx = inputData.getGames().get(0).getStartGame().getPlayerTwoDeckIdx();
+        for(GameInput gameInput : inputData.getGames()){
+            int player1Idx = gameInput.getStartGame().getPlayerOneDeckIdx();
+            int player2Idx = gameInput.getStartGame().getPlayerTwoDeckIdx();
 
-        ArrayList<CardInput> player1Deck = player1Decks.getDecks().get(player1Idx);
-        ArrayList<CardInput> player2Deck = player2Decks.getDecks().get(player2Idx);
+            ArrayList<CardInput> player1Deck = player1Decks.getDecks().get(player1Idx);
+            ArrayList<CardInput> player2Deck = player2Decks.getDecks().get(player2Idx);
 
-        Random seed = new Random(inputData.getGames().get(0).getStartGame().getShuffleSeed());
-        Collections.shuffle(player1Deck, seed);
-        Random seed2 = new Random(inputData.getGames().get(0).getStartGame().getShuffleSeed());
-        Collections.shuffle(player2Deck, seed2);
+            Random seed = new Random(gameInput.getStartGame().getShuffleSeed());
+            Collections.shuffle(player1Deck, seed);
+            Random seed2 = new Random(gameInput.getStartGame().getShuffleSeed());
+            Collections.shuffle(player2Deck, seed2);
 
-        ArrayList<Card> cards1 = new ArrayList<>();
-        ArrayList<Card> cards2 = new ArrayList<>();
+            ArrayList<Card> cards1 = new ArrayList<>();
+            ArrayList<Card> cards2 = new ArrayList<>();
 
+            for(CardInput cardInput : player1Deck){
+                if(minionList.contains(cardInput.getName())) cards1.add(new Minion(cardInput));
+                if(environmentList.contains(cardInput.getName())) cards1.add(new Environment(cardInput));
+            }
 
-        for(CardInput cardInput : player1Deck){
-            if(minionList.contains(cardInput.getName())) cards1.add(new Minion(cardInput));
-            if(environmentList.contains(cardInput.getName())) cards1.add(new Environment(cardInput));
-        }
+            for(CardInput cardInput : player2Deck){
+                if(minionList.contains(cardInput.getName())) cards2.add(new Minion(cardInput));
+                if(environmentList.contains(cardInput.getName())) cards2.add(new Environment(cardInput));
+            }
 
-        for(CardInput cardInput : player2Deck){
-            if(minionList.contains(cardInput.getName())) cards2.add(new Minion(cardInput));
-            if(environmentList.contains(cardInput.getName())) cards2.add(new Environment(cardInput));
-        }
+            Player player1 = new Player(cards1);
+            Player player2 = new Player(cards2);
 
-        cards1.remove(0);
-        cards2.remove(0);
+            player1.getCardsInHand().add(player1.getDeck().remove(0));
+            player2.getCardsInHand().add(player2.getDeck().remove(0));
 
-        Hero hero1 = new Hero(inputData.getGames().get(0).getStartGame().getPlayerOneHero());
-        Hero hero2 = new Hero(inputData.getGames().get(0).getStartGame().getPlayerTwoHero());
+            player1.setHero(new Hero(gameInput.getStartGame().getPlayerOneHero()));
+            player2.setHero(new Hero(gameInput.getStartGame().getPlayerTwoHero()));
 
-        ArrayList<ActionsInput> actiuni = inputData.getGames().get(0).getActions();
+            Game game = new Game(player1, player2, gameInput.getStartGame().getStartingPlayer());
 
-        int firstPlayer = inputData.getGames().get(0).getStartGame().getStartingPlayer();
+            for(ActionsInput action : gameInput.getActions()){
+                switch (action.getCommand()) {
+                    case "getPlayerDeck":
+                        if(action.getPlayerIdx() == 2){
+                            output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player2.getDeck());
+                            break;
+                        }
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player1.getDeck());
+                        break;
+                    case "getPlayerHero":
+                        if(action.getPlayerIdx() == 2) {
+                            output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player2.getHero());
+                            break;
+                        }
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player1.getHero());
+                        break;
+                    case "getPlayerTurn":
+                        output.addObject().put("command", action.getCommand()).put("output", game.getPlayerTurn());
+                        break;
+                case "endPlayerTurn":
+                    game.endTurn();
+                    break;
+                case "getCardsInHand":
+                    ArrayList<Card> cardsCopy = new ArrayList<>();
 
-        for(ActionsInput action : actiuni){
-            switch (action.getCommand()) {
-                case "getPlayerDeck":
                     if(action.getPlayerIdx() == 2){
-                        output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", cards2);
-                        break;
+                        for(Card card : player2.getCardsInHand()){
+                            if(minionList.contains(card.name)) cardsCopy.add(new Minion((Minion) card));
+                            if(environmentList.contains(card.name)) cardsCopy.add(new Environment((Environment) card));
+                        }
                     }
-                    output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", cards1);
-                    break;
-                case "getPlayerHero":
-                    if(action.getPlayerIdx() == 2) {
-                        output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", hero2);
-                        break;
+
+                    if(action.getPlayerIdx() == 1){
+                        for(Card card : player1.getCardsInHand()){
+                            if(minionList.contains(card.name)) cardsCopy.add(new Minion((Minion) card));
+                            if(environmentList.contains(card.name)) cardsCopy.add(new Environment((Environment) card));
+                        }
                     }
-                    output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", hero1);
+                    output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", cardsCopy);
                     break;
-                case "getPlayerTurn":
-                    output.addObject().put("command", action.getCommand()).put("output", firstPlayer);
+                case "getPlayerMana":
+                    if(action.getPlayerIdx() == 2){
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player2.getMana());
+                    } else if (action.getPlayerIdx() == 1) {
+                        output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player1.getMana());
+                    }
                     break;
+                   case "placeCard" :
+                       Player player = (game.getPlayerTurn() == 1)? game.getPlayer1() : game.getPlayer2();
+                       System.out.println(action.getCommand() + " " + action.getHandIdx());
+
+                       if (player.getCardsInHand().size() <= action.getHandIdx())
+                           break;
+
+                       Card card = player.getCardsInHand().get(action.getHandIdx());
+
+                       int row = Card.getCardRow(card, game.getPlayerTurn(), game);
+
+                       boolean error = false;
+                       String msg = null;
+                       if (!card.canBePlacedOnTable()) {
+                           error = true;
+                           msg = "Cannot place environment card on table.";
+                       }
+
+                       if (player.getMana() < card.mana) {
+                           error = true;
+                           msg = "Not enough mana to place card on table.";
+                       }
+
+                       if (game.isRowFull(row)) {
+                           error = true;
+                           msg = "Cannot place card on table since row is full.";
+                       }
+
+                       if(!error){
+                           player.getCardsInHand().remove(action.getHandIdx());
+                           player.removeMana(card.mana);
+                           game.getTable().get(row).add((Minion) card);
+                       }
+                       else{
+                           output.addObject().put("command", action.getCommand()).put("handIdx", action.getPlayerIdx()).putPOJO("error", msg);
+                       }
+                       break;
+
+                    case "getCardsOnTable":
+                        output.addObject().put("command", action.getCommand()).putPOJO("output", game.getTable());
+
+                }
             }
         }
 

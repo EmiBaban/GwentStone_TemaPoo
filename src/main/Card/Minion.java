@@ -1,10 +1,11 @@
-package main;
+package main.Card;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import fileio.CardInput;
+import main.Card.Card;
 
 @JsonPropertyOrder({"mana", "attackDamage", "health", "description", "colors", "name"})
-public class Minion extends Card{
+public class Minion extends Card {
     public int health;
     public int attackDamage;
     public Minion(CardInput cardInput) {
@@ -13,9 +14,13 @@ public class Minion extends Card{
        this.attackDamage = cardInput.getAttackDamage();
     }
 
-//    public Minion(Minion minion) {
-//        super(minion.mana, minion.description, minion.colors, minion.name);
-//        this.health = minion.health;
-//        this.attackDamage = minion.attackDamage;
-//    }
+    public Minion(Minion minion) {
+        super(minion.mana, minion.description, minion.colors, minion.name);
+        this.health = minion.health;
+        this.attackDamage = minion.attackDamage;
+    }
+
+    public boolean canBePlacedOnTable() {
+        return true;
+    }
 }
