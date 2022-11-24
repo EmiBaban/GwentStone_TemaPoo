@@ -2,67 +2,66 @@ package main.Game;
 
 import main.Card.Card;
 import main.Card.Hero;
-
 import java.util.ArrayList;
 
 public class Player {
-    ArrayList<Card> deck;
-    ArrayList<Card> cardsInHand;
-    Hero hero;
-    int mana;
-    int max_mana;
+    private ArrayList<Card> deck;
+    private final ArrayList<Card> cardsInHand;
+    private Hero hero;
+    private int mana;
 
-    public Player(ArrayList<Card> deck){
+    public Player(final ArrayList<Card> deck) {
         this.deck = deck;
         this.mana = 1;
-        this.max_mana = 10;
         cardsInHand = new ArrayList<>();
     }
 
-    public Player(Player player){
+    public Player(final Player player) {
         this.deck = player.getDeck();
         this.mana = player.getMana();
         this.cardsInHand = player.getCardsInHand();
+        this.hero = player.hero;
     }
 
-    public void addMana(int mana){
+    public final void addMana(final int mana) {
         this.mana += mana;
     }
 
-    public void removeMana(int mana){
+    public final void removeMana(final int mana) {
         this.mana -= mana;
     }
 
-    public void placeCardInHand(){
-        if (!deck.isEmpty())
+    public final void placeCardInHand() {
+        if (!deck.isEmpty()) {
             cardsInHand.add(deck.remove(0));
+        }
     }
 
-    public ArrayList<Card> getCardsInHand() {
+    public final ArrayList<Card> getCardsInHand() {
         return cardsInHand;
     }
 
-    public void setDeck(ArrayList<Card> deck) {
+    public final void setDeck(final ArrayList<Card> deck) {
         this.deck = deck;
     }
 
-    public ArrayList<Card> getDeck() {
+    public final ArrayList<Card> getDeck() {
         return deck;
     }
 
-    public void setHero(Hero hero) {
+    public final void setHero(final Hero hero) {
         this.hero = hero;
     }
 
-    public Hero getHero() {
+    public final Hero getHero() {
         return hero;
     }
 
-    public void setMana(int mana) {
+    public final void setMana(final int mana) {
         this.mana = mana;
     }
 
-    public int getMana() {
+    public final int getMana() {
         return mana;
     }
 }

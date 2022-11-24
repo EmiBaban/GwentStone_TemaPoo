@@ -10,7 +10,6 @@ import main.Card.Card;
 import main.Card.Environment;
 import main.Card.Hero;
 import main.Card.Minion;
-import main.Game.Action;
 import main.Game.Game;
 import main.Game.Player;
 
@@ -77,31 +76,15 @@ public final class Main {
 
         //TODO add here the entry point to your implementation
 
-        List<String> minionList = Arrays.asList("The Ripper", "Miraj", "The Cursed One", "Disciple", "Sentinel", "Berserker", "Goliath", "Warden");
-        List<String> environmentList = Arrays.asList("Firestorm", "Winterfell", "Heart Hound");
-
-
-//        ArrayList<Card> cardsInHand1 = new ArrayList<>();
-//        ArrayList<Card> cardsInHand2 = new ArrayList<>();
-//
-//        cardsInHand1.add(player1.getDeck().remove(0));
-//        cardsInHand2.add(player2.getDeck().remove(0));
-
-      //  Game game = new Game(player1, player2);
-//        game.nextRound();
-//        System.out.println(player1.getCardsInHand());
-
-//        player1.PlaceCardInHand(player1.getDeck());
-//        System.out.println(player1.getCardsInHand());
-
-//        ArrayList<Card> hand = new ArrayList<>();
-//        hand.add(player1.getDeck().remove(0));
-//        System.out.println(player1.getDeck().get(0).name);
+        List<String> minionList = Arrays.asList("The Ripper", "Miraj", "The Cursed One",
+                "Disciple", "Sentinel", "Berserker", "Goliath", "Warden");
+        List<String> environmentList = Arrays.asList("Firestorm",
+                "Winterfell", "Heart Hound");
 
         DecksInput player1Decks = inputData.getPlayerOneDecks();
         DecksInput player2Decks = inputData.getPlayerTwoDecks();
 
-        for(GameInput gameInput : inputData.getGames()){
+        for (GameInput gameInput : inputData.getGames()) {
             int player1Idx = gameInput.getStartGame().getPlayerOneDeckIdx();
             int player2Idx = gameInput.getStartGame().getPlayerTwoDeckIdx();
 
@@ -116,14 +99,22 @@ public final class Main {
             ArrayList<Card> cards1 = new ArrayList<>();
             ArrayList<Card> cards2 = new ArrayList<>();
 
-            for(CardInput cardInput : player1Deck){
-                if(minionList.contains(cardInput.getName())) cards1.add(new Minion(cardInput));
-                if(environmentList.contains(cardInput.getName())) cards1.add(new Environment(cardInput));
+            for (CardInput cardInput : player1Deck) {
+                if (minionList.contains(cardInput.getName())) {
+                    cards1.add(new Minion(cardInput));
+                }
+                if (environmentList.contains(cardInput.getName())) {
+                    cards1.add(new Environment(cardInput));
+                }
             }
 
-            for(CardInput cardInput : player2Deck){
-                if(minionList.contains(cardInput.getName())) cards2.add(new Minion(cardInput));
-                if(environmentList.contains(cardInput.getName())) cards2.add(new Environment(cardInput));
+            for (CardInput cardInput : player2Deck) {
+                if (minionList.contains(cardInput.getName())) {
+                    cards2.add(new Minion(cardInput));
+                }
+                if (environmentList.contains(cardInput.getName())) {
+                    cards2.add(new Environment(cardInput));
+                }
             }
 
             Player player1 = new Player(cards1);
@@ -137,94 +128,293 @@ public final class Main {
 
             Game game = new Game(player1, player2, gameInput.getStartGame().getStartingPlayer());
 
-            for(ActionsInput action : gameInput.getActions()){
+            for (ActionsInput action : gameInput.getActions()) {
                 switch (action.getCommand()) {
+                    default : break;
+
                     case "getPlayerDeck":
-                        if(action.getPlayerIdx() == 2){
-                            output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player2.getDeck());
-                            break;
+                        if (action.getPlayerIdx() == 2) {
+                            output.addObject()
+                                    .put("command", action.getCommand())
+                                    .put("playerIdx", action.getPlayerIdx())
+                                    .putPOJO("output", player2.getDeck());
+                        } else {
+                            output.addObject()
+                                    .put("command", action.getCommand())
+                                    .put("playerIdx", action.getPlayerIdx())
+                                    .putPOJO("output", player1.getDeck());
                         }
-                        output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player1.getDeck());
                         break;
+
                     case "getPlayerHero":
-                        if(action.getPlayerIdx() == 2) {
-                            output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player2.getHero());
+                        if (action.getPlayerIdx() == 2) {
+                            output.addObject()
+                                    .put("command", action.getCommand())
+                                    .put("playerIdx", action.getPlayerIdx())
+                                    .putPOJO("output", player2.getHero());
                             break;
+                        } else {
+                            output.addObject()
+                                    .put("command", action.getCommand())
+                                    .put("playerIdx", action.getPlayerIdx())
+                                    .putPOJO("output", player1.getHero());
                         }
-                        output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player1.getHero());
                         break;
+
                     case "getPlayerTurn":
-                        output.addObject().put("command", action.getCommand()).put("output", game.getPlayerTurn());
+                        output.addObject()
+                                .put("command", action.getCommand())
+                                .put("output", game.getCurrentPlayer());
                         break;
+
                 case "endPlayerTurn":
                     game.endTurn();
+                    game.removeDeadCardsFromTable();
+                    game.getAttackCards().clear();
+
                     break;
+
                 case "getCardsInHand":
                     ArrayList<Card> cardsCopy = new ArrayList<>();
-
-                    if(action.getPlayerIdx() == 2){
-                        for(Card card : player2.getCardsInHand()){
-                            if(minionList.contains(card.name)) cardsCopy.add(new Minion((Minion) card));
-                            if(environmentList.contains(card.name)) cardsCopy.add(new Environment((Environment) card));
+                    if (action.getPlayerIdx() == 2) {
+                        for (Card card : player2.getCardsInHand()) {
+                            if (minionList.contains(card.getName())) {
+                                cardsCopy.add(new Minion((Minion) card));
+                            }
+                            if (environmentList.contains(card.getName())) {
+                                cardsCopy.add(new Environment((Environment) card));
+                            }
                         }
                     }
 
-                    if(action.getPlayerIdx() == 1){
-                        for(Card card : player1.getCardsInHand()){
-                            if(minionList.contains(card.name)) cardsCopy.add(new Minion((Minion) card));
-                            if(environmentList.contains(card.name)) cardsCopy.add(new Environment((Environment) card));
+                    if (action.getPlayerIdx() == 1) {
+                        for (Card card : player1.getCardsInHand()) {
+                            if (minionList.contains(card.getName())) {
+                                cardsCopy.add(new Minion((Minion) card));
+                            }
+                            if (environmentList.contains(card.getName())) {
+                                cardsCopy.add(new Environment((Environment) card));
+                            }
                         }
                     }
-                    output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", cardsCopy);
+                    output.addObject().put("command", action.getCommand())
+                            .put("playerIdx", action.getPlayerIdx())
+                            .putPOJO("output", cardsCopy);
                     break;
+
                 case "getPlayerMana":
-                    if(action.getPlayerIdx() == 2){
-                        output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player2.getMana());
+                    if (action.getPlayerIdx() == 2) {
+                        output.addObject().put("command", action.getCommand())
+                                .put("playerIdx", action.getPlayerIdx())
+                                .putPOJO("output", player2.getMana());
                     } else if (action.getPlayerIdx() == 1) {
-                        output.addObject().put("command", action.getCommand()).put("playerIdx", action.getPlayerIdx()).putPOJO("output", player1.getMana());
+                        output.addObject().put("command", action.getCommand())
+                                .put("playerIdx", action.getPlayerIdx())
+                                .putPOJO("output", player1.getMana());
                     }
                     break;
+
                    case "placeCard" :
-                       Player player = (game.getPlayerTurn() == 1)? game.getPlayer1() : game.getPlayer2();
-                       System.out.println(action.getCommand() + " " + action.getHandIdx());
+                       Player player = (game.getCurrentPlayer() == 1)
+                               ? game.getPlayer1() : game.getPlayer2();
 
-                       if (player.getCardsInHand().size() <= action.getHandIdx())
+                       if (player.getCardsInHand().size() <= action.getHandIdx()) {
                            break;
-
-                       Card card = player.getCardsInHand().get(action.getHandIdx());
-
-                       int row = Card.getCardRow(card, game.getPlayerTurn(), game);
-
-                       boolean error = false;
-                       String msg = null;
-                       if (!card.canBePlacedOnTable()) {
-                           error = true;
-                           msg = "Cannot place environment card on table.";
                        }
 
-                       if (player.getMana() < card.mana) {
-                           error = true;
-                           msg = "Not enough mana to place card on table.";
+                       Card card = player.getCardsInHand().get(action.getHandIdx());
+                       int row = Card.getCardRow(card, game.getCurrentPlayer(), game);
+
+                       if (!card.canBePlacedOnTable()) {
+                           output.addObject().put("command", action.getCommand())
+                                   .put("handIdx", action.getPlayerIdx())
+                                   .putPOJO("error", "Cannot place environment card on table.");
+                           break;
+
+                       }
+
+                       if (player.getMana() < card.getMana()) {
+                           output.addObject().put("command", action.getCommand())
+                                   .put("handIdx", action.getPlayerIdx())
+                                   .putPOJO("error",
+                                           "Not enough mana to place card on table.");
+                           break;
                        }
 
                        if (game.isRowFull(row)) {
-                           error = true;
-                           msg = "Cannot place card on table since row is full.";
+                           output.addObject().put("command", action.getCommand())
+                                   .put("handIdx",
+                                           action.getPlayerIdx())
+                                   .putPOJO("error",
+                                           "Cannot place card on table since row is full.");
+                           break;
+
                        }
 
-                       if(!error){
-                           player.getCardsInHand().remove(action.getHandIdx());
-                           player.removeMana(card.mana);
-                           game.getTable().get(row).add((Minion) card);
-                       }
-                       else{
-                           output.addObject().put("command", action.getCommand()).put("handIdx", action.getPlayerIdx()).putPOJO("error", msg);
-                       }
+                       player.getCardsInHand().remove(action.getHandIdx());
+                       player.removeMana(card.getMana());
+                       game.getTable().get(row).add((Minion) card);
+
                        break;
 
                     case "getCardsOnTable":
-                        output.addObject().put("command", action.getCommand()).putPOJO("output", game.getTable());
+                        output.addObject().put("command", action.getCommand())
+                                .putPOJO("output", game.getTable());
+                        break;
 
+                    case "getEnvironmentCardsInHand":
+                        ArrayList<Card> envCards = new ArrayList<>();
+
+                        if (action.getPlayerIdx() == 1) {
+                            for (Card envCard : player1.getCardsInHand()) {
+                                if (environmentList.contains(envCard.getName())) {
+                                    envCards.add(new Environment((Environment) envCard));
+                                }
+                            }
+                        } else {
+                            for (Card envCard : player2.getCardsInHand()) {
+                                if (environmentList.contains(envCard.getName())) {
+                                    envCards.add(new Environment((Environment) envCard));
+                                }
+                            }
+                        }
+                        output.addObject().put("command", action.getCommand())
+                                .put("playerIdx", action.getPlayerIdx())
+                                .putPOJO("output", envCards);
+                        break;
+
+                    case "getCardAtPosition":
+                        Minion minion = game.getCardAtPosition(action.getX(), action.getY());
+                        if (minion != null) {
+                            output.addObject().put("command", action.getCommand())
+                                    .putPOJO("output", new Minion(minion));
+                        } else {
+                            output.addObject().put("output", "No card available at that position.");
+                        }
+                        break;
+
+                    case "useEnvironmentCard":
+                        player = (game.getCurrentPlayer() == 1)
+                                ? game.getPlayer1() : game.getPlayer2();
+                        card = player.getCardsInHand().get(action.getHandIdx());
+
+                        if (!environmentList.contains(card.getName())) {
+                            output.addObject().put("command", action.getCommand())
+                                    .put("handIdx", action.getHandIdx())
+                                    .put("affectedRow", action.getAffectedRow())
+                                    .putPOJO("error",
+                                            "Chosen card is not of type environment.");
+                            break;
+                        }
+
+                        if (player.getMana() < card.getMana()) {
+                            output.addObject().put("command", action.getCommand())
+                                    .put("handIdx", action.getHandIdx())
+                                    .put("affectedRow", action.getAffectedRow())
+                                    .putPOJO("error",
+                                            "Not enough mana to use environment card.");
+                            break;
+                        }
+
+                        if (game.isEnemyRow(action.getAffectedRow())) {
+                            output.addObject().put("command", action.getCommand())
+                                    .put("handIdx", action.getHandIdx())
+                                    .put("affectedRow", action.getAffectedRow())
+                                    .putPOJO("error",
+                                            "Chosen row does not belong to the enemy.");
+                            break;
+                        }
+
+                        if (card.getName().equals("Heart Hound")
+                                && game.isRowFull(game.oppositeRow(action.getAffectedRow()))) {
+                            output.addObject().put("command", action.getCommand())
+                                    .put("handIdx", action.getHandIdx())
+                                    .put("affectedRow", action.getAffectedRow())
+                                    .putPOJO("error",
+                                            "Cannot steal enemy card "
+                                                    + "since the player's row is full.");
+                            break;
+                        }
+
+                        Environment environment = (Environment) card;
+                        if (environment.getName().equals("Firestorm")) {
+                            environment.firestormAbility(game, action.getAffectedRow());
+                        }
+                        if (environment.getName().equals("Winterfell")) {
+                            environment.winterfellAbility(game, action.getAffectedRow());
+                        }
+                        if (environment.getName().equals("Heart Hound")) {
+                            environment.heartHoundAbility(game, action.getAffectedRow());
+                        }
+                        player.getCardsInHand().remove(card);
+                        player.removeMana(card.getMana());
+                        break;
+
+                    case "getFrozenCardsOnTable":
+                        ArrayList<Minion> cards = new ArrayList<>();
+
+                        for (ArrayList<Minion> arrayListRow : game.getTable()) {
+                            for (Minion min : arrayListRow) {
+                                if (min.getFrozen()) {
+                                    cards.add(min);
+                                }
+                            }
+                        }
+                        output.addObject().put("command", action.getCommand())
+                                .putPOJO("output", cards);
+                        break;
+
+                    case "cardUsesAttack":
+                        Coordinates attacker = action.getCardAttacker();
+                        Coordinates defender = action.getCardAttacked();
+                        minion = game.getCardAtPosition(attacker.getX(), attacker.getY());
+                        Minion enemy = game.getCardAtPosition(defender.getX(), defender.getY());
+
+                        if (minion == null) {
+                            break;
+                        }
+                        if (game.isEnemyRow(defender.getX())) {
+                            output.addObject().put("command", action.getCommand())
+                                    .putPOJO("cardAttacker", attacker)
+                                    .putPOJO("cardAttacked", defender)
+                                    .put("error",
+                                            "Attacked card does not belong to the enemy.");
+                            break;
+                        }
+                        if (game.getAttackCards().contains(minion)) {
+                            output.addObject().put("command", action.getCommand())
+                                    .putPOJO("cardAttacker", attacker)
+                                    .putPOJO("cardAttacked", defender)
+                                    .put("error",
+                                            "Attacker card has already attacked this turn.");
+                            break;
+                        }
+                        if (minion.getFrozen()) {
+                            output.addObject().put("command", action.getCommand())
+                                    .putPOJO("cardAttacker", attacker)
+                                    .putPOJO("cardAttacked", defender)
+                                    .put("error",
+                                            "Attacker card is frozen.");
+                            break;
+                        }
+                        if (game.enemyHasTanks(minionList)) {
+                            enemy = game.getCardAtPosition(defender.getX(), defender.getY());
+
+                            if (enemy == null || !enemy.isTank(minionList)) {
+                                output.addObject().put("command", action.getCommand())
+                                        .putPOJO("cardAttacker", attacker)
+                                        .putPOJO("cardAttacked", defender)
+                                        .put("error",
+                                                "Attacked card is not of type 'Tank'.");
+                            }
+                            break;
+                        }
+                        if (enemy == null) {
+                            break;
+                        }
+                        minion.attackCard(enemy);
+                        game.getAttackCards().add(minion);
+                        break;
                 }
             }
         }
